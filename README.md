@@ -1,5 +1,6 @@
 # LLM-Based Test Automation & Failure Analysis System
 
+<<<<<<< HEAD
 ## Overview
 
 This project is an AI-assisted software testing and debugging workflow built in Python. It analyzes a Python module, asks an LLM to generate relevant tests, executes them with pytest, captures failures, and then uses LLM-based reasoning to classify the issue, identify likely root causes, and produce a structured bug report.
@@ -188,3 +189,17 @@ This is an example structure, not a measured benchmark.
 - `.env` is intentionally excluded from Git.
 - API keys are never printed in logs or terminal output.
 - The project is designed to be readable and interview-friendly.
+=======
+An AI-powered test automation and failure analysis system built with Python and LLM APIs. The system automates test case generation, analyzes execution logs, performs failure triage, and generates structured bug reports to streamline debugging.
+
+## Key Features
+
+- Automated test case generation using LLMs
+- Execution log analysis and error identification
+- Automated failure triage and categorization
+- Structured bug report generation
+- Prompt engineering and LLM evaluation
+- Logging and monitoring for workflow observability
+- Support for OpenAI and Gemini APIs
+- LangChain-based LLM workflow orchestration
+>>>>>>> 8a426f75e209135befd4ab56980fc3fe3388a08b
