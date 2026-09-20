@@ -4,7 +4,6 @@
 
 This project is an AI-assisted software testing and debugging workflow built in Python. It analyzes a Python module, asks an LLM to generate relevant tests, executes them with pytest, captures failures, and then uses LLM-based reasoning to classify the issue, identify likely root causes, and produce a structured bug report.
 
-This is a portfolio and academic project designed to demonstrate practical LLM orchestration and debugging workflows. It does not claim production-grade reliability or benchmark performance.
 
 ## Features
 
