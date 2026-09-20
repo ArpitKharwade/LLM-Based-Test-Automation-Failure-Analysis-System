@@ -1,6 +1,5 @@
 # LLM-Based Test Automation & Failure Analysis System
 
-<<<<<<< HEAD
 ## Overview
 
 This project is an AI-assisted software testing and debugging workflow built in Python. It analyzes a Python module, asks an LLM to generate relevant tests, executes them with pytest, captures failures, and then uses LLM-based reasoning to classify the issue, identify likely root causes, and produce a structured bug report.
@@ -115,7 +114,7 @@ For Gemini, use:
 OPENAI_API_KEY=
 GOOGLE_API_KEY=your_key_here
 LLM_PROVIDER=gemini
-MODEL_NAME=gemini-1.5-flash
+MODEL_NAME=gemini-3.8-flash
 ```
 
 The application validates the selected provider and raises an explicit error if the matching key is missing.
@@ -202,4 +201,4 @@ An AI-powered test automation and failure analysis system built with Python and 
 - Logging and monitoring for workflow observability
 - Support for OpenAI and Gemini APIs
 - LangChain-based LLM workflow orchestration
->>>>>>> 8a426f75e209135befd4ab56980fc3fe3388a08b
+

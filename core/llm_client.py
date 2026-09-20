@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from typing import Any
 
 from langchain_core.language_models import BaseChatModel
@@ -46,6 +47,41 @@ class LLMClient:
             logger.exception("Failed to initialize LLM client for provider=%s", self.provider)
             raise RuntimeError(f"Unable to initialize LLM client: {exc}") from exc
 
+    @staticmethod
+    def _extract_text_from_response(response: Any) -> str:
+        """Normalize LangChain message payloads into plain text."""
+
+        if response is None:
+            raise ValueError("LLM returned no response.")
+
+        content = getattr(response, "content", None)
+        if isinstance(content, str):
+            return content.strip()
+
+        if isinstance(content, list):
+            segments: list[str] = []
+            for item in content:
+                if isinstance(item, str):
+                    segments.append(item)
+                elif isinstance(item, dict):
+                    value = item.get("text")
+                    if isinstance(value, str):
+                        segments.append(value)
+            assembled = "\n".join(segments).strip()
+            if assembled:
+                return assembled
+
+        if isinstance(content, dict):
+            value = content.get("text")
+            if isinstance(value, str):
+                return value.strip()
+
+        raw_text = str(content).strip() if content is not None else ""
+        if raw_text:
+            return raw_text
+
+        raise ValueError("LLM returned an empty or invalid response.")
+
     def generate(self, prompt: str) -> str:
         """Return generated text from the selected model."""
 
@@ -55,18 +91,37 @@ class LLMClient:
         if self.model is None:
             raise RuntimeError("LLM model is not initialized.")
 
-        try:
-            response = self.model.invoke(prompt)
-            if response is None:
-                raise ValueError("LLM returned no response.")
+        last_error: Exception | None = None
+        for attempt in range(3):
+            try:
+                response = self.model.invoke(prompt)
+                text = self._extract_text_from_response(response)
+                if not text or not text.strip():
+                    raise ValueError("LLM returned an empty or invalid response.")
+                return text.strip()
+            except TimeoutError as exc:
+                logger.error("LLM request timed out for provider=%s on attempt %s", self.provider, attempt + 1)
+                last_error = exc
+                if attempt < 2:
+                    time.sleep(2 ** (attempt + 1))
+                    continue
+                raise RuntimeError("LLM request timed out.") from exc
+            except Exception as exc:
+                last_error = exc
+                message = str(exc).lower()
+                is_transient = any(token in message for token in ["503", "unavailable", "rate limit", "temporar", "overloaded"])
+                logger.warning(
+                    "LLM generation failed for provider=%s on attempt %s: %s",
+                    self.provider,
+                    attempt + 1,
+                    exc,
+                )
+                if is_transient and attempt < 2:
+                    time.sleep(2 ** (attempt + 1))
+                    continue
+                logger.exception("LLM generation failed for provider=%s", self.provider)
+                raise RuntimeError(f"Failed to generate response: {exc}") from exc
 
-            text = getattr(response, "content", None)
-            if not isinstance(text, str) or not text.strip():
-                raise ValueError("LLM returned an empty or invalid response.")
-            return text.strip()
-        except TimeoutError as exc:
-            logger.error("LLM request timed out for provider=%s", self.provider)
-            raise RuntimeError("LLM request timed out.") from exc
-        except Exception as exc:
-            logger.exception("LLM generation failed for provider=%s", self.provider)
-            raise RuntimeError(f"Failed to generate response: {exc}") from exc
+        if last_error is not None:
+            raise RuntimeError(f"Failed to generate response: {last_error}")
+        raise RuntimeError("Failed to generate response.")

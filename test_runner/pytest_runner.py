@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import subprocess
+import sys
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -33,7 +34,7 @@ class PytestRunner:
         if not file_path.exists():
             raise FileNotFoundError(f"Test file not found: {file_path}")
 
-        command = ["python", "-m", "pytest", str(file_path), "-q"]
+        command = [sys.executable, "-m", "pytest", str(file_path), "-q"]
         start = time.time()
         completed = subprocess.run(
             command,
@@ -50,20 +51,26 @@ class PytestRunner:
 
         if return_code == 0:
             status = "PASSED"
-        elif "ERROR" in stdout.upper() or "ERROR" in stderr.upper():
+        elif " error" in stdout.lower() or " error" in stderr.lower():
             status = "ERROR"
         else:
             status = "FAILED"
 
         summary = {"passed": 0, "failed": 0, "errors": 0, "total": 0}
-        if stdout:
-            for line in stdout.splitlines():
-                if " passed" in line.lower():
-                    summary["passed"] += 1
-                elif " failed" in line.lower():
-                    summary["failed"] += 1
-                elif " error" in line.lower():
-                    summary["errors"] += 1
+        summary_text = f"{stdout}\n{stderr}".lower()
+        for line in summary_text.splitlines():
+            tokens = line.split()
+            for index, token in enumerate(tokens):
+                if not token.isdigit():
+                    continue
+                count = int(token)
+                label = tokens[index + 1] if index + 1 < len(tokens) else ""
+                if label.startswith("passed"):
+                    summary["passed"] += count
+                elif label.startswith("failed"):
+                    summary["failed"] += count
+                elif label.startswith("error"):
+                    summary["errors"] += count
 
         summary["total"] = summary["passed"] + summary["failed"] + summary["errors"]
 
