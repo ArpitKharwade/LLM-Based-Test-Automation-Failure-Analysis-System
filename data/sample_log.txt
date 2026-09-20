@@ -1,0 +1,12 @@
+====================
+Pytest result summary
+====================
+
+FAILED sample_project/test_calculator.py::test_calculate_average_valid - AssertionError: assert 2.5 == 2.5
+
+Traceback (most recent call last):
+  File "...", line ..., in <module>
+    assert calculate_average([1, 2, 3, 4]) == 2.5
+  File "sample_project/calculator.py", line 17, in calculate_average
+    return total / (len(numbers) - 1)
+ZeroDivisionError: division by zero
